@@ -230,6 +230,22 @@
     font-size: 12px; color: var(--muted); line-height: 1.8;
   }
   .mine-record b { color: var(--ink); font-weight: 500; }
+  .calc-result {
+    margin-top: 20px; text-align: center; background: var(--bg-card);
+    border: 1px solid var(--line); border-radius: 16px; padding: 24px 18px;
+  }
+  .result-badge {
+    width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 14px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .result-badge .zi { font-size: 36px; color: rgba(237,230,218,0.95); }
+  .result-badge .en { font-size: 9px; letter-spacing: 2px; color: rgba(237,230,218,0.7); margin-top: 2px; }
+  .result-name { font-size: 20px; letter-spacing: 3px; font-weight: 500; }
+  .result-detail { font-size: 11px; color: var(--muted); line-height: 1.9; margin-top: 10px; letter-spacing: 1px; }
+  .result-gems { margin-top: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .result-gems i { font-style: normal; font-size: 11px; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--gold); color: var(--gold); }
+  .calc-result .submit-btn { margin-top: 14px; }
+  .submit-btn.ghost { background: transparent; border: 1px solid var(--gold); color: var(--gold); }
   .copy-tip {
     position: fixed; left:50%; top: 46%; transform: translateX(-50%);
     background: rgba(237,230,218,0.95); color: #17120C; font-size: 12px;
@@ -337,49 +353,27 @@
   <div class="screen" id="screen-mine">
     <div class="topbar">
       <div class="brand" style="font-size:15px; letter-spacing:4px;">相生记</div>
-      <div class="mark">客户登记</div>
+      <div class="mark">五行测算</div>
     </div>
     <div class="mine-body">
-      <h2 class="serif">客户登记</h2>
-      <div class="sub">聊到有想法的客户，随手登记。生成卡片复制，发给店主建档。</div>
+      <h2 class="serif">五行测算</h2>
+      <div class="sub">输入客户的出生年份，看他的五行本命，顺势推荐对应的宝贝。</div>
       <div class="mine-field">
-        <label>客户称呼 *</label>
-        <input id="c-name" placeholder="如：王姐">
+        <label>出生年份</label>
+        <input id="calc-year" type="number" min="1924" max="2043" placeholder="如：1990" inputmode="numeric">
       </div>
-      <div class="mine-field">
-        <label>微信 / 电话</label>
-        <input id="c-contact" placeholder="客户微信或手机号">
+      <button class="submit-btn" id="btn-calc">算算我的五行</button>
+      <div class="calc-result" id="calc-result" style="display:none">
+        <div class="result-badge" id="result-badge">
+          <span class="zi" id="result-zi">火</span>
+          <span class="en" id="result-en">FIRE</span>
+        </div>
+        <div class="result-name" id="result-name">您属火</div>
+        <div class="result-detail" id="result-detail"></div>
+        <div class="result-gems" id="result-gems"></div>
+        <button class="submit-btn" id="btn-goto-cat">去看看火类目的宝贝</button>
+        <button class="submit-btn ghost" id="btn-copy-hs">复制推荐语</button>
       </div>
-      <div class="mine-field">
-        <label>想买什么</label>
-        <select id="c-need">
-          <option value="未说（先登记）">未说（先登记）</option>
-          <option value="手串">手串</option>
-          <option value="挂件">挂件</option>
-          <option value="吊坠">吊坠</option>
-          <option value="手镯">手镯</option>
-          <option value="戒指">戒指</option>
-          <option value="项链">项链</option>
-          <option value="耳饰">耳饰</option>
-          <option value="摆件">摆件</option>
-        </select>
-      </div>
-      <div class="mine-field">
-        <label>备注（五行 / 预算 / 意向）</label>
-        <textarea id="c-note" placeholder="如：属马本命年，预算一千左右"></textarea>
-      </div>
-      <div class="mine-field">
-        <label>登记人（你的称呼）</label>
-        <input id="c-sales" placeholder="如：小李">
-      </div>
-      <button class="submit-btn" id="btn-customer">生成登记卡片</button>
-      <div class="card-out" id="card-out">
-        <div class="card-text" id="card-text"></div>
-        <button class="submit-btn" id="btn-copy-card" style="margin-top:10px; background:transparent; border:1px solid var(--gold); color:var(--gold);">复制卡片</button>
-      </div>
-      <h2 class="serif">本机登记记录</h2>
-      <div class="sub" id="mine-count"></div>
-      <div id="mine-list"></div>
     </div>
     <div class="tabbar">
       <div class="tab" data-tab="home"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>首页</div>
@@ -618,58 +612,34 @@ document.addEventListener('click', e => {
   } else if (t === 'cat') {
     renderCat(currentCat);
   } else if (t === 'mine') {
-    renderMine();
     show('screen-mine');
   }
 });
 
-// ===== 客户登记 =====
-function pad2(n) { return String(n).padStart(2, '0'); }
+// ===== 五行测算 =====
+const TIANGAN_NAMES = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const TIANGAN_WX = ['mu','mu','huo','huo','tu','tu','jin','jin','shui','shui'];
+const SHENGXIAO = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
+const SX_WX = { 鼠:'shui',牛:'tu',虎:'mu',兔:'mu',龙:'tu',蛇:'huo',马:'huo',羊:'tu',猴:'jin',鸡:'jin',狗:'tu',猪:'shui' };
+const WX_INFO = {
+  mu:  { name:'木', en:'WOOD', color:'#5E7A5A', words:'木主健康、生机与文昌。事业上升期、创业、求健康最宜。', gems:['翡翠','绿松石','祖母绿','绿幽灵','绿发晶'] },
+  huo: { name:'火', en:'FIRE', color:'#A84A3C', words:'火主热情、人脉与桃花。本命年辟邪、做流量生意、开新局最宜。', gems:['红玛瑙','南红','石榴石','红纹石','粉晶'] },
+  tu:  { name:'土', en:'EARTH', color:'#A67C3D', words:'土主信用、稳定与财运。实体生意、求稳、蓄财最宜。', gems:['蜜蜡','黄水晶','和田玉','虎眼石'] },
+  jin: { name:'金', en:'METAL', color:'#C6A15B', words:'金主财富与决断。求财、做决策、职场上升、守财最宜。', gems:['黄金','白金','白水晶','月光石','珍珠'] },
+  shui:{ name:'水', en:'WATER', color:'#3E5C76', words:'水主智慧与财源。做生意求财、跑业务、求贵人、挡小人最宜。', gems:['黑曜石','海蓝宝','蓝宝石','青金石'] }
+};
+const WX_HUASHU = {
+  mu: '您五行属木，木主健康和事业生长。翡翠、绿松石是您的本命宝石，戴绿旺文昌，做生意的越戴越顺。',
+  huo: '您五行属火，火主名气、人脉和桃花。红玛瑙、南红是您的本命石，红绳一戴，贵人自来，小人绕道。',
+  tu: '您五行属土，土主信用和稳定财运。蜜蜡、黄水晶是您的本命石，越戴越稳，做生意讲信用的人最配。',
+  jin: '您五行属金，金主财富和决断力。黄金、白金是您的本命色，白水晶、月光石帮您守财，做决定不犹豫。',
+  shui: '您五行属水，水主智慧和财源。黑曜石辟邪挡煞，蓝宝石助贵人，水命人戴黑蓝，财路通。'
+};
 
-function renderMine() {
-  const recs = JSON.parse(localStorage.getItem('xiangshengji_customers') || '[]');
-  document.getElementById('mine-count').textContent = recs.length
-    ? '本机已登记 ' + recs.length + ' 位客户（数据存在本机，小程序版将云端汇总）'
-    : '还没有登记记录';
-  document.getElementById('mine-list').innerHTML = recs.slice().reverse().map(r => `
-    <div class="mine-record"><b>${r.name}</b>${r.contact ? ' · ' + r.contact : ''}<br>
-    ${r.need}${r.note ? ' · ' + r.note : ''}<br>
-    <span style="font-size:10px">${r.sales || ''} · ${r.time}</span></div>`).join('');
-}
-
-document.getElementById('btn-customer').addEventListener('click', () => {
-  const name = document.getElementById('c-name').value.trim();
-  const contact = document.getElementById('c-contact').value.trim();
-  const need = document.getElementById('c-need').value;
-  const note = document.getElementById('c-note').value.trim();
-  const sales = document.getElementById('c-sales').value.trim();
-  if (!name) {
-    const tip = document.getElementById('copy-tip');
-    tip.textContent = '客户称呼必填';
-    tip.classList.add('show');
-    setTimeout(() => tip.classList.remove('show'), 1600);
-    return;
-  }
-  const d = new Date();
-  const time = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-  const rec = { name, contact, need, note, sales, time };
-  const recs = JSON.parse(localStorage.getItem('xiangshengji_customers') || '[]');
-  recs.push(rec);
-  localStorage.setItem('xiangshengji_customers', JSON.stringify(recs));
-  const card = `【相生记客户登记】\n客户：${name}\n微信/电话：${contact || '未留'}\n意向：${need}\n备注：${note || '无'}\n登记人：${sales || '—'} · ${time}`;
-  document.getElementById('card-text').textContent = card;
-  document.getElementById('card-out').style.display = 'block';
-  renderMine();
-  document.getElementById('c-name').value = '';
-  document.getElementById('c-contact').value = '';
-  document.getElementById('c-note').value = '';
-});
-
-document.getElementById('btn-copy-card').addEventListener('click', () => {
-  const txt = document.getElementById('card-text').textContent;
+function copyText(txt, msg) {
   const done = () => {
     const tip = document.getElementById('copy-tip');
-    tip.textContent = '已复制，粘贴发给店主';
+    tip.textContent = msg;
     tip.classList.add('show');
     setTimeout(() => tip.classList.remove('show'), 1800);
   };
@@ -678,7 +648,7 @@ document.getElementById('btn-copy-card').addEventListener('click', () => {
   } else {
     fallbackCopy(txt, done);
   }
-});
+}
 
 function fallbackCopy(txt, done) {
   const ta = document.createElement('textarea');
@@ -688,6 +658,44 @@ function fallbackCopy(txt, done) {
   try { document.execCommand('copy'); done(); } catch (e) {}
   document.body.removeChild(ta);
 }
+
+document.getElementById('btn-calc').addEventListener('click', () => {
+  const y = parseInt(document.getElementById('calc-year').value, 10);
+  const tip = document.getElementById('copy-tip');
+  if (!y || y < 1924 || y > 2043) {
+    tip.textContent = '请输入 1924-2043 之间的出生年份';
+    tip.classList.add('show');
+    setTimeout(() => tip.classList.remove('show'), 1800);
+    return;
+  }
+  const tgIdx = ((y - 4) % 10 + 10) % 10;
+  const sxIdx = ((y - 4) % 12 + 12) % 12;
+  const tg = TIANGAN_NAMES[tgIdx];
+  const sx = SHENGXIAO[sxIdx];
+  const tgWx = TIANGAN_WX[tgIdx];
+  const sxWx = SX_WX[sx];
+  const info = WX_INFO[tgWx];
+  document.getElementById('result-badge').style.background = info.color;
+  document.getElementById('result-zi').textContent = info.name;
+  document.getElementById('result-en').textContent = info.en;
+  document.getElementById('result-name').textContent = `您属${info.name}`;
+  const same = tgWx === sxWx;
+  document.getElementById('result-detail').innerHTML =
+    `${y}年 ${tg}${tgWx===sxWx?'':'年干属'+info.name} · 生肖${sx}属${WX_INFO[sxWx].name}<br>${info.words}`;
+  document.getElementById('result-gems').innerHTML = info.gems.map(g => `<i>${g}</i>`).join('');
+  document.getElementById('btn-goto-cat').textContent = `去看看${info.name}类目的宝贝`;
+  document.getElementById('btn-goto-cat').dataset.cat = tgWx;
+  document.getElementById('calc-result').style.display = 'block';
+  document.getElementById('calc-result').scrollIntoView({ behavior: 'smooth' });
+});
+
+document.getElementById('btn-goto-cat').addEventListener('click', () => {
+  renderCat(document.getElementById('btn-goto-cat').dataset.cat);
+});
+
+document.getElementById('btn-copy-hs').addEventListener('click', () => {
+  copyText(WX_HUASHU[document.getElementById('btn-goto-cat').dataset.cat], '推荐语已复制，发给客户');
+});
 
 PRODUCTS = PRODUCTS.map(normProduct);
 renderHome();
