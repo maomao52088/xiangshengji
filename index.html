@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>相生记 · 高保真原型</title>
+<style>
+  :root {
+    --bg: #17120C;
+    --bg-soft: #201913;
+    --bg-card: #241C14;
+    --gold: #C6A15B;
+    --gold-soft: #A88A52;
+    --ink: #EDE6DA;
+    --muted: #8D857A;
+    --line: rgba(198,161,91,0.18);
+    --mu: #5E7A5A;
+    --huo: #A84A3C;
+    --tu: #A67C3D;
+    --jin: #C6A15B;
+    --shui: #3E5C76;
+    --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    background: #0D0A06;
+    font-family: "PingFang SC","Microsoft YaHei",sans-serif;
+    color: var(--ink);
+    display:flex; justify-content:center; align-items:flex-start;
+    min-height:100dvh; padding: 32px 16px 64px;
+  }
+  .phone {
+    width: 390px; background: var(--bg); border-radius: 44px;
+    border: 1px solid rgba(198,161,91,0.25);
+    box-shadow: 0 40px 80px -20px rgba(0,0,0,0.8), 0 0 0 8px #201a12;
+    overflow: hidden; position: relative;
+  }
+  .screen { display:none; min-height: 720px; }
+  .screen.active { display:block; }
+
+  /* ============ 通用 ============ */
+  .serif { font-family: "Noto Serif SC","Songti SC","SimSun",serif; }
+  .topbar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 18px 20px 10px;
+  }
+  .topbar .brand { font-size: 19px; letter-spacing: 6px; color: var(--ink); }
+  .topbar .brand em { font-style:normal; color: var(--gold); }
+  .topbar .mark { font-size: 11px; color: var(--muted); letter-spacing: 2px; }
+  .back-btn {
+    width:34px; height:34px; border-radius:50%; border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--gold);
+    font-size:16px; cursor:pointer; background:transparent;
+  }
+  .back-btn:active { transform: scale(0.94); }
+
+  /* ============ 首页：五行方位宫格 ============ */
+  .hero {
+    text-align:center; padding: 28px 20px 8px;
+  }
+  .hero .sub { font-size:11px; color:var(--gold); letter-spacing:8px; margin-bottom:10px; }
+  .hero h1 { font-size: 34px; letter-spacing: 14px; font-weight: 600; }
+  .hero .tagline { font-size: 12px; color: var(--muted); letter-spacing: 2px; margin-top: 12px; }
+
+  .wuxing-grid {
+    display:grid; grid-template-columns: 1fr 1.6fr 1fr; grid-template-rows: 1fr 1.4fr 1fr;
+    gap: 8px; padding: 26px 20px 8px; aspect-ratio: 1/1.05;
+  }
+  .wx {
+    border-radius: 14px; position:relative; cursor:pointer; overflow:hidden;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border: 1px solid var(--line);
+    transition: transform .3s var(--ease);
+  }
+  .wx:active { transform: scale(0.96); }
+  .wx .zi { font-size: 34px; font-weight: 500; color: rgba(237,230,218,0.92); }
+  .wx .en { font-size: 10px; letter-spacing: 3px; color: rgba(237,230,218,0.55); margin-top: 2px; }
+  .wx .cnt { font-size: 10px; color: rgba(237,230,218,0.7); margin-top: 6px; }
+  .wx.south { grid-column: 2; grid-row: 1; background: var(--huo); }
+  .wx.east  { grid-column: 1; grid-row: 2; background: var(--mu); }
+  .wx.center{ grid-column: 2; grid-row: 2; background: linear-gradient(160deg,#7A5A2A,#5C4420); border-color: rgba(198,161,91,0.45); }
+  .wx.center .zi { font-size: 42px; }
+  .wx.west  { grid-column: 3; grid-row: 2; background: var(--jin); }
+  .wx.north { grid-column: 2; grid-row: 3; background: var(--shui); }
+  .wx .corner { position:absolute; top:8px; right:10px; font-size:9px; letter-spacing:1px; color: rgba(237,230,218,0.6); }
+
+  .section-title {
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding: 22px 20px 12px;
+  }
+  .section-title h2 { font-size: 17px; letter-spacing: 3px; font-weight: 500; }
+  .section-title span { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+  .h-scroll { display:flex; gap:12px; padding: 0 20px 12px; overflow-x:auto; scrollbar-width:none; }
+  .h-scroll::-webkit-scrollbar { display:none; }
+  .h-card { flex: 0 0 148px; cursor:pointer; }
+  .h-card .img {
+    height: 148px; border-radius: 12px; background-size:cover; background-position:center;
+    border: 1px solid var(--line); position:relative;
+  }
+  .h-card .img .tag {
+    position:absolute; left:8px; top:8px; font-size:9px; letter-spacing:2px;
+    background: rgba(23,18,12,0.75); color: var(--gold); padding:3px 8px; border-radius: 20px;
+  }
+  .h-card h3 { font-size: 13px; font-weight: 500; margin-top: 8px; letter-spacing: 1px; }
+  .h-card .meta { font-size: 10px; color: var(--muted); margin-top: 3px; }
+  .h-card .price { font-size: 13px; color: var(--gold); margin-top: 4px; font-weight: 500; }
+
+  /* ============ 类目页 ============ */
+  .cat-hero {
+    padding: 26px 20px 18px; display:flex; align-items:center; gap: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .cat-hero .badge {
+    width: 74px; height: 74px; border-radius: 50%; flex-shrink:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .cat-hero .badge .zi { font-size: 28px; color: rgba(237,230,218,0.95); }
+  .cat-hero .badge .en { font-size: 9px; letter-spacing: 2px; color: rgba(237,230,218,0.7); margin-top:2px; }
+  .cat-hero h1 { font-size: 24px; letter-spacing: 6px; font-weight: 500; }
+  .cat-hero .note { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 1px; line-height: 1.7; }
+  .cat-hero .note b { color: var(--gold); font-weight: 500; }
+
+  .prod-list { padding: 6px 20px 90px; display:flex; flex-direction:column; gap: 20px; }
+  .prod {
+    display:flex; gap: 14px; cursor:pointer; padding-bottom: 18px;
+    border-bottom: 1px solid rgba(198,161,91,0.10);
+  }
+  .prod:active { opacity: 0.8; }
+  .prod .img { width: 104px; height: 128px; border-radius: 10px; background-size:cover; background-position:center; flex-shrink:0; border: 1px solid var(--line); }
+  .prod .info { flex:1; display:flex; flex-direction:column; padding-top: 2px; }
+  .prod .info h3 { font-size: 15px; font-weight: 500; letter-spacing: 1px; }
+  .prod .info .mat { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .prod .info .tags { display:flex; gap:6px; margin-top: 8px; flex-wrap:wrap; }
+  .prod .info .tags i {
+    font-style:normal; font-size: 9px; letter-spacing:1px; padding: 2px 8px;
+    border-radius: 20px; border: 1px solid var(--line); color: var(--gold-soft);
+  }
+  .prod .info .price { font-size: 15px; color: var(--gold); margin-top: auto; font-weight: 500; }
+
+  /* ============ 详情页 ============ */
+  .detail-img {
+    height: 400px; background-size:cover; background-position:center;
+    position: relative;
+  }
+  .detail-img .mask {
+    position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(23,18,12,0.35) 0%, transparent 30%, transparent 55%, var(--bg) 100%);
+  }
+  .detail-top { position:absolute; top:0; left:0; right:0; z-index:2; padding: 18px 20px 0; display:flex; justify-content:space-between; }
+  .detail-body { padding: 0 22px; }
+  .detail-body .mat-line { font-size: 11px; letter-spacing: 2px; color: var(--gold); margin-bottom: 10px; }
+  .detail-body h1 { font-size: 24px; letter-spacing: 4px; font-weight: 500; }
+  .detail-body .wx-tags { display:flex; gap:8px; margin-top: 14px; }
+  .detail-body .wx-tags i {
+    font-style:normal; font-size: 10px; letter-spacing: 2px; padding: 4px 12px; border-radius: 20px;
+    border: 1px solid var(--line); color: var(--ink);
+  }
+  .detail-body .wx-tags i.hot { background: var(--huo); border-color: var(--huo); color:#F3EAE0; }
+  .detail-body .price-row { display:flex; align-items:baseline; gap: 12px; margin-top: 18px; }
+  .detail-body .price-row .price { font-size: 26px; color: var(--gold); font-weight: 600; }
+  .detail-body .price-row .stock { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+  .detail-body .desc {
+    font-size: 12px; color: var(--muted); line-height: 2; margin-top: 16px;
+    border-top: 1px solid rgba(198,161,91,0.12); padding-top: 14px;
+  }
+  .huashu {
+    margin: 18px 0 26px; background: var(--bg-card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .huashu .label { font-size: 10px; color: var(--gold); letter-spacing: 3px; margin-bottom: 8px; }
+  .huashu p { font-size: 12px; line-height: 1.9; color: var(--ink); }
+  .copy-btn {
+    width: 100%; padding: 15px 0; background: var(--gold); color: #17120C;
+    border: none; border-radius: 12px; font-size: 15px; letter-spacing: 4px; font-weight: 600;
+    cursor: pointer; transition: transform .2s var(--ease);
+  }
+  .copy-btn:active { transform: scale(0.97); }
+  .copy-tip {
+    position: fixed; left:50%; top: 46%; transform: translateX(-50%);
+    background: rgba(237,230,218,0.95); color: #17120C; font-size: 12px;
+    padding: 10px 22px; border-radius: 30px; letter-spacing: 2px;
+    opacity: 0; pointer-events: none; transition: opacity .3s var(--ease); z-index: 99;
+  }
+  .copy-tip.show { opacity: 1; }
+
+  /* ============ 底部 Tab ============ */
+  .tabbar {
+    position: absolute; bottom: 0; left:0; right:0;
+    display:flex; justify-content: space-around; align-items:center;
+    padding: 10px 0 14px; background: rgba(23,18,12,0.92); backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(198,161,91,0.12);
+  }
+  .tabbar .tab { display:flex; flex-direction:column; align-items:center; gap:3px; font-size: 10px; color: var(--muted); letter-spacing:1px; cursor:pointer; }
+  .tabbar .tab.on { color: var(--gold); }
+  .tabbar .tab svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+  .page-note { text-align:center; font-size:11px; color:#6E675C; padding: 40px 0 10px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+  <!-- ============ 屏1 首页 ============ -->
+  <div class="screen active" id="screen-home">
+    <div class="topbar">
+      <div class="brand">相<em>生</em>记</div>
+      <div class="mark">五行相生 · 本命珠玉</div>
+    </div>
+    <div class="hero">
+      <div class="sub">金 木 水 火 土</div>
+      <h1 class="serif">按五行 寻本命饰</h1>
+      <div class="tagline">五行相生 · 一物一命</div>
+    </div>
+
+    <div class="wuxing-grid">
+      <div class="wx south" data-cat="huo">
+        <span class="corner">南</span>
+        <span class="zi">火</span><span class="en">FIRE</span><span class="cnt">12 件</span>
+      </div>
+      <div class="wx east" data-cat="mu">
+        <span class="corner">东</span>
+        <span class="zi">木</span><span class="en">WOOD</span><span class="cnt">15 件</span>
+      </div>
+      <div class="wx center" data-cat="tu">
+        <span class="corner">中</span>
+        <span class="zi">土</span><span class="en">EARTH</span><span class="cnt">18 件</span>
+      </div>
+      <div class="wx west" data-cat="jin">
+        <span class="corner">西</span>
+        <span class="zi">金</span><span class="en">METAL</span><span class="cnt">21 件</span>
+      </div>
+      <div class="wx north" data-cat="shui">
+        <span class="corner">北</span>
+        <span class="zi">水</span><span class="en">WATER</span><span class="cnt">14 件</span>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <h2 class="serif">精选</h2>
+      <span>本月上新</span>
+    </div>
+    <div class="h-scroll" id="h-scroll"></div>
+    <div class="page-note">原型 1/3 · 首页</div>
+    <div class="tabbar">
+      <div class="tab on"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>首页</div>
+      <div class="tab"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>分类</div>
+      <div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>我的</div>
+    </div>
+  </div>
+
+  <!-- ============ 屏2 类目页 ============ -->
+  <div class="screen" id="screen-cat">
+    <div class="topbar">
+      <div class="back-btn" data-goto="home">‹</div>
+      <div class="brand" style="font-size:15px; letter-spacing:4px;">相生记</div>
+      <div style="width:34px"></div>
+    </div>
+    <div class="cat-hero" id="cat-hero"></div>
+    <div class="prod-list" id="prod-list"></div>
+    <div class="tabbar">
+      <div class="tab"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>首页</div>
+      <div class="tab on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>分类</div>
+      <div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>我的</div>
+    </div>
+  </div>
+
+  <!-- ============ 屏3 详情页 ============ -->
+  <div class="screen" id="screen-detail">
+    <div class="detail-img" id="detail-img">
+      <div class="mask"></div>
+      <div class="detail-top">
+        <div class="back-btn" data-goto="cat">‹</div>
+        <div style="width:34px"></div>
+      </div>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+    <div class="tabbar" style="background:transparent; border-top:none;"></div>
+  </div>
+</div>
+
+<div class="copy-tip" id="copy-tip">推荐语已复制，发给客户</div>
+
+<script>
+// ===== 五行类目数据（与 wuxing_rules.json 对应）=====
+const CATS = {
+  huo:  { name:"火", en:"FIRE", color:"#A84A3C", note:"火主热情、人脉与桃花。红玛瑙、南红、石榴石为本命宝石，本命年最宜红绳护身。", hot:true },
+  mu:   { name:"木", en:"WOOD", color:"#5E7A5A", note:"木主健康、生机与文昌。翡翠、绿松石为本命宝石，事业上升期最宜佩戴。", hot:false },
+  tu:   { name:"土", en:"EARTH", color:"#A67C3D", note:"土主信用、稳定与财运。蜜蜡、黄水晶为本命宝石，生意人越戴越稳。", hot:false },
+  jin:  { name:"金", en:"METAL", color:"#C6A15B", note:"金主财富与决断。黄金、白金为本命色，白水晶、月光石助守财。", hot:false },
+  shui: { name:"水", en:"WATER", color:"#3E5C76", note:"水主智慧与财源。黑曜石辟邪挡煞，蓝宝石助贵人，财路自通。", hot:false }
+};
+const CAT_ORDER = ["mu","huo","tu","jin","shui"];
+
+let PRODUCTS = [
+  // 木
+  { id:"p0", cat:"mu", name:"翡翠平安扣", mat:"糯冰种翡翠 · 直径28mm", price:"¥ 3,600", tag:"木 · 翡翠", img:"https://picsum.photos/seed/jade01/600/720",
+    desc:"糯冰种起胶，底色匀净。平安扣形制圆融，寓意出入平安。传统木命本命玉，戴绿旺文昌。",
+    huashu:"您五行属木，木主健康和事业生长。翡翠、绿松石是您的本命宝石，这枚平安扣糯冰种起胶，戴绿旺文昌，做生意的越戴越顺。" },
+  { id:"p1", cat:"mu", name:"绿松石手串", mat:"湖北云盖寺 · 8mm", price:"¥ 2,180", tag:"木 · 绿松石", img:"https://picsum.photos/seed/turquoise01/600/720",
+    desc:"云盖寺高瓷蓝绿，铁线自然。木命本命石，颜色沉静，养眼养心。",
+    huashu:"绿松石是木命本命石，颜色沉静养眼。您属木，事业上升期戴它，稳中有进。" },
+  { id:"p2", cat:"mu", name:"祖母绿戒指", mat:"哥伦比亚 · 18K金托", price:"¥ 8,600", tag:"木 · 祖母绿", img:"https://picsum.photos/seed/emerald01/600/720",
+    desc:"哥伦比亚矿区经典绿，净度通透，18K金爪镶。木命贵气之选，送人自戴皆宜。",
+    huashu:"祖母绿是木命贵气之选，绿得正，衬您的气质。这枚是哥伦比亚料，净度通透，戴着谈生意气场都不一样。" },
+  // 火
+  { id:"p3", cat:"huo", name:"南红玛瑙手串", mat:"川料柿子红 · 8mm", price:"¥ 1,280", tag:"火 · 南红", img:"https://picsum.photos/seed/nanhong01/600/720",
+    desc:"川料柿子红，色正肉满。本命年红绳首选，火命本命石。",
+    huashu:"您五行属火，火主名气人脉桃花。南红是您的本命石，这串川料柿子红，色正肉满，红绳一戴贵人自来，小人绕道。" },
+  { id:"p4", cat:"huo", name:"石榴石手串", mat:"巴西玫瑰红 · 6mm", price:"¥ 680", tag:"火 · 石榴石", img:"https://picsum.photos/seed/garnet01/600/720",
+    desc:"巴西玫瑰红，通透微裂。旺人脉、旺桃花，火命日常款。",
+    huashu:"石榴石旺人脉旺桃花，火命人戴着正合适。这串巴西玫瑰红，日常百搭，送人也有面子。" },
+  { id:"p5", cat:"huo", name:"红纹石吊坠", mat:"阿根廷 · 银镶", price:"¥ 860", tag:"火 · 红纹石", img:"https://picsum.photos/seed/rhodo01/600/720",
+    desc:"阿根廷粉红纹，白纹如波。情缘石，桃花运最佳拍档。",
+    huashu:"红纹石是情缘石，最旺桃花。您火命本就主桃花，戴上它今年人缘运势都顺。" },
+  // 土
+  { id:"p6", cat:"tu", name:"老蜜蜡吊坠", mat:"波罗的海 · 18g", price:"¥ 2,680", tag:"土 · 蜜蜡", img:"https://picsum.photos/seed/mila01/600/720",
+    desc:"波罗的海老蜡，色泽醇厚。土命本命石，越戴越润，越戴越稳。",
+    huashu:"您五行属土，土主信用和稳定财运。蜜蜡是您的本命石，这枚老蜡越戴越润，做生意讲信用的人最配。" },
+  { id:"p7", cat:"tu", name:"黄水晶手链", mat:"巴西 · 10mm", price:"¥ 580", tag:"土 · 黄水晶", img:"https://picsum.photos/seed/citrine01/600/720",
+    desc:"巴西黄水晶，色如蜜糖。财库石，土命蓄财首选。",
+    huashu:"黄水晶是财库石，土命蓄财首选。颜色像蜜糖一样，戴着心情好，财也稳。" },
+  { id:"p8", cat:"tu", name:"和田玉平安牌", mat:"新疆和田 · 籽料", price:"¥ 5,200", tag:"土 · 和田玉", img:"https://picsum.photos/seed/hetian01/600/720",
+    desc:"新疆籽料，油润细腻。一牌平安，土命镇宅压身。",
+    huashu:"和田玉是土命镇身之宝，这枚籽料油润细腻，平安牌一戴，稳字当头。" },
+  // 金
+  { id:"p9", cat:"jin", name:"古法金素圈手镯", mat:"足金999 · 24g", price:"¥ 15,800", tag:"金 · 足金", img:"https://picsum.photos/seed/gold01/600/720",
+    desc:"古法磨砂工艺，哑光质感。金命本命，越戴越亮，保值传家。",
+    huashu:"您五行属金，金主财富和决断力。古法金素圈，哑光不扎眼，保值又传家，戴上去做决定都不犹豫。" },
+  { id:"p10", cat:"jin", name:"月光石手串", mat:"斯里兰卡 · 7mm", price:"¥ 880", tag:"金 · 月光石", img:"https://picsum.photos/seed/moon01/600/720",
+    desc:"斯里兰卡蓝月光，光晕清透。守财助眠，金命辅石。",
+    huashu:"月光石帮您守财安神，金命戴它最合适。这串蓝月光，光晕清透，晚上戴着睡都香。" },
+  { id:"p11", cat:"jin", name:"白水晶貔貅", mat:"巴西 · 白水晶", price:"¥ 1,180", tag:"金 · 白水晶", img:"https://picsum.photos/seed/quartz01/600/720",
+    desc:"巴西白水晶，通透无瑕。貔貅纳财，金命财库守护。",
+    huashu:"白水晶通透纯净，貔貅纳财。金命人戴它，财库稳稳的，本命年也压得住。" },
+  // 水
+  { id:"p12", cat:"shui", name:"黑曜石貔貅串", mat:"彩虹眼 · 10mm", price:"¥ 980", tag:"水 · 黑曜石", img:"https://picsum.photos/seed/heiyao01/600/720",
+    desc:"彩虹眼黑曜石，眼线清晰。辟邪挡煞，水命本命石。",
+    huashu:"您五行属水，水主智慧和财源。黑曜石辟邪挡煞，这串彩虹眼眼线清晰，跑业务见客户戴着气场都不一样。" },
+  { id:"p13", cat:"shui", name:"海蓝宝吊坠", mat:"巴西 · 银镶", price:"¥ 1,380", tag:"水 · 海蓝宝", img:"https://picsum.photos/seed/aqua01/600/720",
+    desc:"巴西海蓝宝，色如海水。贵人石，水命人脉之源。",
+    huashu:"海蓝宝是贵人石，水命人戴着人脉自来。颜色像海水一样，清爽又高级。" },
+  { id:"p14", cat:"shui", name:"青金石手串", mat:"阿富汗 · 8mm", price:"¥ 720", tag:"水 · 青金石", img:"https://picsum.photos/seed/lapis01/600/720",
+    desc:"阿富汗老矿，蓝中带金星。帝王石，水命智慧之选。",
+    huashu:"青金石是帝王石，蓝底金星，水命戴它脑子清楚，生意场上财路通。" }
+];
+
+let currentCat = "huo";
+let currentProd = null;
+
+const fmtPrice = v => {
+  const n = Number(String(v).replace(/[^0-9.]/g, ''));
+  return '¥ ' + (isNaN(n) ? String(v) : n.toLocaleString());
+};
+
+function renderHome() {
+  const on = PRODUCTS.filter(p => p.on !== false);
+  const h = document.getElementById('h-scroll');
+  if (!h) return;
+  h.innerHTML = on.slice(0, 4).map(p => `
+    <div class="h-card" data-prod="${p.id}">
+      <div class="img" style="background-image:url('${p.img}')"><span class="tag">${p.tag || ''}</span></div>
+      <h3>${p.name}</h3><div class="meta">${p.mat || ''}</div><div class="price">${fmtPrice(p.price)}</div>
+    </div>`).join('');
+  document.querySelectorAll('.wx').forEach(w => {
+    const c = w.dataset.cat;
+    const n = PRODUCTS.filter(p => p.cat === c).length;
+    const cnt = w.querySelector('.cnt');
+    if (cnt) cnt.textContent = n + ' 件';
+  });
+}
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('phone').scrollTop = 0;
+}
+
+function renderCat(catKey) {
+  const c = CATS[catKey];
+  currentCat = catKey;
+  document.getElementById('cat-hero').innerHTML = `
+    <div class="badge" style="background:${c.color}">
+      <span class="zi">${c.name}</span><span class="en">${c.en}</span>
+    </div>
+    <div>
+      <h1 class="serif">${c.name} · ${c.en}</h1>
+      <div class="note">${c.note}</div>
+    </div>`;
+  const list = PRODUCTS.filter(p => p.cat === catKey);
+  document.getElementById('prod-list').innerHTML = list.map((p,i) => `
+    <div class="prod" data-prod="${p.id}">
+      <div class="img" style="background-image:url('${p.img}')"></div>
+      <div class="info">
+        <h3>${p.name}</h3>
+        <div class="mat">${p.mat}</div>
+        <div class="tags"><i>${p.tag}</i><i>${c.name}命本命</i></div>
+        <div class="price">${fmtPrice(p.price)}</div>
+      </div>
+    </div>`).join('');
+  show('screen-cat');
+}
+
+function renderDetail(pid) {
+  const p = PRODUCTS.find(x => x.id === pid);
+  if (!p) return;
+  currentProd = p;
+  const c = CATS[p.cat];
+  document.getElementById('detail-img').style.backgroundImage = `url('${p.img}')`;
+  document.getElementById('detail-body').innerHTML = `
+    <div class="mat-line">${p.mat}</div>
+    <h1 class="serif">${p.name}</h1>
+    <div class="wx-tags">
+      <i class="${c.hot?'hot':''}">${c.name} · ${c.en}</i>
+      <i>本命推荐</i>
+    </div>
+    <div class="price-row">
+      <span class="price">${fmtPrice(p.price)}</span><span class="stock">现货 · 一件一图</span>
+    </div>
+    <div class="desc">${p.desc}</div>
+    <div class="huashu">
+      <div class="label">销售推荐语</div>
+      <p>${p.huashu}</p>
+    </div>
+    <button class="copy-btn" id="copy-btn">复制推荐语</button>`;
+  show('screen-detail');
+}
+
+document.addEventListener('click', e => {
+  const wx = e.target.closest('.wx');
+  if (wx) { renderCat(wx.dataset.cat); return; }
+  const hc = e.target.closest('.h-card');
+  if (hc) { renderDetail(hc.dataset.prod); return; }
+  const prod = e.target.closest('.prod');
+  if (prod) { renderDetail(prod.dataset.prod); return; }
+  const back = e.target.closest('.back-btn');
+  if (back) {
+    const g = back.dataset.goto;
+    if (g === 'home') show('screen-home');
+    if (g === 'cat') renderCat(currentCat);
+    return;
+  }
+  if (e.target.id === 'copy-btn') {
+    const tip = document.getElementById('copy-tip');
+    tip.classList.add('show');
+    setTimeout(() => tip.classList.remove('show'), 1800);
+    return;
+  }
+});
+
+// ===== 启动：先渲染内置数据，再加载线上数据 =====
+renderHome();
+fetch('products.json')
+  .then(r => r.json())
+  .then(d => {
+    if (d && Array.isArray(d.products) && d.products.length) {
+      PRODUCTS = d.products;
+      renderHome();
+    }
+  })
+  .catch(() => {});
+</script>
+</body>
+</html>
