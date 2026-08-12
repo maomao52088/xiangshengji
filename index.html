@@ -130,7 +130,21 @@
   .cat-hero .note { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 1px; line-height: 1.7; }
   .cat-hero .note b { color: var(--gold); font-weight: 500; }
 
+  /* 筛选条 */
+  .filters-bar { padding: 16px 20px 2px; display: flex; flex-direction: column; gap: 12px; }
+  .f-row { display: flex; align-items: center; gap: 12px; }
+  .f-lab { font-size: 11px; color: var(--gold); letter-spacing: 2px; flex-shrink: 0; width: 32px; }
+  .f-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .f-chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0; font-size: 11px; letter-spacing: 1px; padding: 5px 14px; border-radius: 20px;
+    border: 1px solid var(--line); color: var(--muted); cursor: pointer; background: transparent;
+    transition: all .2s var(--ease);
+  }
+  .chip.on { background: var(--gold); color: #17120C; border-color: var(--gold); font-weight: 600; }
+
   .prod-list { padding: 6px 20px 90px; display:flex; flex-direction:column; gap: 20px; }
+  .empty { text-align: center; padding: 50px 0; color: var(--muted); font-size: 12px; letter-spacing: 2px; }
   .prod {
     display:flex; gap: 14px; cursor:pointer; padding-bottom: 18px;
     border-bottom: 1px solid rgba(198,161,91,0.10);
@@ -266,6 +280,7 @@
       <div style="width:34px"></div>
     </div>
     <div class="cat-hero" id="cat-hero"></div>
+    <div class="filters-bar" id="filters-bar"></div>
     <div class="prod-list" id="prod-list"></div>
     <div class="tabbar">
       <div class="tab"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>首页</div>
@@ -300,6 +315,32 @@ const CATS = {
   shui: { name:"水", en:"WATER", color:"#3E5C76", note:"水主智慧与财源。黑曜石辟邪挡煞，蓝宝石助贵人，财路自通。", hot:false }
 };
 const CAT_ORDER = ["mu","huo","tu","jin","shui"];
+
+const normProduct = p => ({ ...p, type: p.type || '其他', gender: p.gender || '通用', material: p.material || '其他' });
+
+const FILTER_OPTS = {
+  type: ["手串","挂件","吊坠","手镯","戒指","项链","耳饰","摆件"],
+  gender: ["男","女","通用"],
+  material: ["玉石","晶石","宝石","蜜蜡琥珀","木质","金属","珍珠","其他"]
+};
+let curType = "all", curGender = "all", curMaterial = "all";
+
+function renderFilters() {
+  const bar = document.getElementById('filters-bar');
+  if (!bar) return;
+  bar.innerHTML = [
+    ['type', '类型', curType, FILTER_OPTS.type],
+    ['gender', '性别', curGender, FILTER_OPTS.gender],
+    ['material', '材质', curMaterial, FILTER_OPTS.material]
+  ].map(([k, lab, cur, opts]) => `
+    <div class="f-row">
+      <span class="f-lab">${lab}</span>
+      <div class="f-chips">
+        <div class="chip ${cur === 'all' ? 'on' : ''}" data-k="${k}" data-v="all">全部</div>
+        ${opts.map(o => `<div class="chip ${cur === o ? 'on' : ''}" data-k="${k}" data-v="${o}">${o}</div>`).join('')}
+      </div>
+    </div>`).join('');
+}
 
 let PRODUCTS = [
   // 木
@@ -396,7 +437,16 @@ function renderCat(catKey) {
       <h1 class="serif">${c.name} · ${c.en}</h1>
       <div class="note">${c.note}</div>
     </div>`;
-  const list = PRODUCTS.filter(p => p.cat === catKey);
+  let list = PRODUCTS.filter(p => p.cat === catKey && p.on !== false);
+  if (curType !== 'all') list = list.filter(p => p.type === curType);
+  if (curGender !== 'all') list = list.filter(p => p.gender === curGender);
+  if (curMaterial !== 'all') list = list.filter(p => p.material === curMaterial);
+  renderFilters();
+  if (!list.length) {
+    document.getElementById('prod-list').innerHTML = `<div class="empty">这个筛选条件下还没有产品</div>`;
+    show('screen-cat');
+    return;
+  }
   document.getElementById('prod-list').innerHTML = list.map((p,i) => `
     <div class="prod" data-prod="${p.id}">
       <div class="img" style="background-image:url('${p.img}')"></div>
@@ -458,12 +508,23 @@ document.addEventListener('click', e => {
 });
 
 // ===== 启动：先渲染内置数据，再加载线上数据 =====
+document.addEventListener('click', e => {
+  const chip = e.target.closest('#filters-bar .chip');
+  if (!chip) return;
+  const k = chip.dataset.k, v = chip.dataset.v;
+  if (k === 'type') curType = v;
+  if (k === 'gender') curGender = v;
+  if (k === 'material') curMaterial = v;
+  renderCat(currentCat);
+});
+
+PRODUCTS = PRODUCTS.map(normProduct);
 renderHome();
 fetch('products.json')
   .then(r => r.json())
   .then(d => {
     if (d && Array.isArray(d.products) && d.products.length) {
-      PRODUCTS = d.products;
+      PRODUCTS = d.products.map(normProduct);
       renderHome();
     }
   })
