@@ -439,7 +439,11 @@ function renderCat(catKey) {
     </div>`;
   let list = PRODUCTS.filter(p => p.cat === catKey && p.on !== false);
   if (curType !== 'all') list = list.filter(p => p.type === curType);
-  if (curGender !== 'all') list = list.filter(p => p.gender === curGender);
+  if (curGender !== 'all') {
+    list = curGender === '通用'
+      ? list.filter(p => p.gender === '通用')
+      : list.filter(p => p.gender === curGender || p.gender === '通用');
+  }
   if (curMaterial !== 'all') list = list.filter(p => p.material === curMaterial);
   renderFilters();
   if (!list.length) {
