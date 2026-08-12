@@ -199,6 +199,37 @@
     cursor: pointer; transition: transform .2s var(--ease);
   }
   .copy-btn:active { transform: scale(0.97); }
+
+  /* 我的 / 客户登记页 */
+  .mine-body { padding: 10px 22px 100px; }
+  .mine-body h2 { font-size: 17px; letter-spacing: 3px; font-weight: 500; margin: 20px 0 6px; }
+  .mine-body .sub { font-size: 11px; color: var(--muted); margin-bottom: 16px; letter-spacing: 1px; line-height: 1.8; }
+  .mine-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .mine-field label { font-size: 11px; color: var(--gold); letter-spacing: 2px; }
+  .mine-field input, .mine-field select, .mine-field textarea {
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 11px 14px; color: var(--ink); font-size: 13px; font-family: inherit; outline: none;
+    transition: border-color .2s;
+  }
+  .mine-field input:focus, .mine-field select:focus, .mine-field textarea:focus { border-color: var(--gold); }
+  .mine-field select option { background: var(--bg-card); }
+  .mine-field textarea { resize: vertical; min-height: 60px; }
+  .submit-btn {
+    width: 100%; padding: 14px 0; background: var(--gold); color: #17120C; border: none;
+    border-radius: 12px; font-size: 15px; letter-spacing: 4px; font-weight: 600;
+    cursor: pointer; transition: transform .2s var(--ease);
+  }
+  .submit-btn:active { transform: scale(0.97); }
+  .card-out {
+    margin-top: 16px; background: var(--bg-card); border: 1px solid var(--gold);
+    border-radius: 12px; padding: 14px 16px; display: none;
+  }
+  .card-out .card-text { font-size: 12px; line-height: 1.9; color: var(--ink); white-space: pre-wrap; }
+  .mine-record {
+    padding: 12px 0; border-bottom: 1px solid rgba(198,161,91,0.10);
+    font-size: 12px; color: var(--muted); line-height: 1.8;
+  }
+  .mine-record b { color: var(--ink); font-weight: 500; }
   .copy-tip {
     position: fixed; left:50%; top: 46%; transform: translateX(-50%);
     background: rgba(237,230,218,0.95); color: #17120C; font-size: 12px;
@@ -300,6 +331,61 @@
     </div>
     <div class="detail-body" id="detail-body"></div>
     <div class="tabbar" style="background:transparent; border-top:none;"></div>
+  </div>
+
+  <!-- ============ 屏4 我的 / 客户登记 ============ -->
+  <div class="screen" id="screen-mine">
+    <div class="topbar">
+      <div class="brand" style="font-size:15px; letter-spacing:4px;">相生记</div>
+      <div class="mark">客户登记</div>
+    </div>
+    <div class="mine-body">
+      <h2 class="serif">客户登记</h2>
+      <div class="sub">聊到有想法的客户，随手登记。生成卡片复制，发给店主建档。</div>
+      <div class="mine-field">
+        <label>客户称呼 *</label>
+        <input id="c-name" placeholder="如：王姐">
+      </div>
+      <div class="mine-field">
+        <label>微信 / 电话</label>
+        <input id="c-contact" placeholder="客户微信或手机号">
+      </div>
+      <div class="mine-field">
+        <label>想买什么</label>
+        <select id="c-need">
+          <option value="未说（先登记）">未说（先登记）</option>
+          <option value="手串">手串</option>
+          <option value="挂件">挂件</option>
+          <option value="吊坠">吊坠</option>
+          <option value="手镯">手镯</option>
+          <option value="戒指">戒指</option>
+          <option value="项链">项链</option>
+          <option value="耳饰">耳饰</option>
+          <option value="摆件">摆件</option>
+        </select>
+      </div>
+      <div class="mine-field">
+        <label>备注（五行 / 预算 / 意向）</label>
+        <textarea id="c-note" placeholder="如：属马本命年，预算一千左右"></textarea>
+      </div>
+      <div class="mine-field">
+        <label>登记人（你的称呼）</label>
+        <input id="c-sales" placeholder="如：小李">
+      </div>
+      <button class="submit-btn" id="btn-customer">生成登记卡片</button>
+      <div class="card-out" id="card-out">
+        <div class="card-text" id="card-text"></div>
+        <button class="submit-btn" id="btn-copy-card" style="margin-top:10px; background:transparent; border:1px solid var(--gold); color:var(--gold);">复制卡片</button>
+      </div>
+      <h2 class="serif">本机登记记录</h2>
+      <div class="sub" id="mine-count"></div>
+      <div id="mine-list"></div>
+    </div>
+    <div class="tabbar">
+      <div class="tab" data-tab="home"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>首页</div>
+      <div class="tab" data-tab="cat"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>分类</div>
+      <div class="tab on" data-tab="mine"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>我的</div>
+    </div>
   </div>
 </div>
 
@@ -532,12 +618,76 @@ document.addEventListener('click', e => {
   } else if (t === 'cat') {
     renderCat(currentCat);
   } else if (t === 'mine') {
-    const tip = document.getElementById('copy-tip');
-    tip.textContent = '「我的」建设中，先用分类看产品';
-    tip.classList.add('show');
-    setTimeout(() => tip.classList.remove('show'), 1800);
+    renderMine();
+    show('screen-mine');
   }
 });
+
+// ===== 客户登记 =====
+function pad2(n) { return String(n).padStart(2, '0'); }
+
+function renderMine() {
+  const recs = JSON.parse(localStorage.getItem('xiangshengji_customers') || '[]');
+  document.getElementById('mine-count').textContent = recs.length
+    ? '本机已登记 ' + recs.length + ' 位客户（数据存在本机，小程序版将云端汇总）'
+    : '还没有登记记录';
+  document.getElementById('mine-list').innerHTML = recs.slice().reverse().map(r => `
+    <div class="mine-record"><b>${r.name}</b>${r.contact ? ' · ' + r.contact : ''}<br>
+    ${r.need}${r.note ? ' · ' + r.note : ''}<br>
+    <span style="font-size:10px">${r.sales || ''} · ${r.time}</span></div>`).join('');
+}
+
+document.getElementById('btn-customer').addEventListener('click', () => {
+  const name = document.getElementById('c-name').value.trim();
+  const contact = document.getElementById('c-contact').value.trim();
+  const need = document.getElementById('c-need').value;
+  const note = document.getElementById('c-note').value.trim();
+  const sales = document.getElementById('c-sales').value.trim();
+  if (!name) {
+    const tip = document.getElementById('copy-tip');
+    tip.textContent = '客户称呼必填';
+    tip.classList.add('show');
+    setTimeout(() => tip.classList.remove('show'), 1600);
+    return;
+  }
+  const d = new Date();
+  const time = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const rec = { name, contact, need, note, sales, time };
+  const recs = JSON.parse(localStorage.getItem('xiangshengji_customers') || '[]');
+  recs.push(rec);
+  localStorage.setItem('xiangshengji_customers', JSON.stringify(recs));
+  const card = `【相生记客户登记】\n客户：${name}\n微信/电话：${contact || '未留'}\n意向：${need}\n备注：${note || '无'}\n登记人：${sales || '—'} · ${time}`;
+  document.getElementById('card-text').textContent = card;
+  document.getElementById('card-out').style.display = 'block';
+  renderMine();
+  document.getElementById('c-name').value = '';
+  document.getElementById('c-contact').value = '';
+  document.getElementById('c-note').value = '';
+});
+
+document.getElementById('btn-copy-card').addEventListener('click', () => {
+  const txt = document.getElementById('card-text').textContent;
+  const done = () => {
+    const tip = document.getElementById('copy-tip');
+    tip.textContent = '已复制，粘贴发给店主';
+    tip.classList.add('show');
+    setTimeout(() => tip.classList.remove('show'), 1800);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(done).catch(() => fallbackCopy(txt, done));
+  } else {
+    fallbackCopy(txt, done);
+  }
+});
+
+function fallbackCopy(txt, done) {
+  const ta = document.createElement('textarea');
+  ta.value = txt;
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) {}
+  document.body.removeChild(ta);
+}
 
 PRODUCTS = PRODUCTS.map(normProduct);
 renderHome();
