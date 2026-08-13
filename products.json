@@ -3,6 +3,22 @@
   "updated": "2026-08-13",
   "products": [
     {
+      "cat": "shui",
+      "name": "和田玉墨玉手串",
+      "type": "手串",
+      "gender": "通用",
+      "material": "玉石",
+      "mat": "和田玉 墨玉",
+      "price": 3000,
+      "stock": 2,
+      "tag": "水 · 和田玉",
+      "img": "https://maomao52088.github.io/xiangshengji/images/img_1786591686708.jpg",
+      "desc": "和田黑玉，市场称墨玉，经典款，料子扎实，五行本命之选，戴出门有面子。",
+      "huashu": "您五行属水，水主智慧和财源。黑曜石辟邪挡煞，蓝宝石助贵人，财路自通。",
+      "id": "p1786591746055",
+      "on": true
+    },
+    {
       "id": "p0",
       "cat": "mu",
       "type": "挂件",
