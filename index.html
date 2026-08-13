@@ -584,9 +584,7 @@ document.addEventListener('click', e => {
     return;
   }
   if (e.target.id === 'copy-btn') {
-    const tip = document.getElementById('copy-tip');
-    tip.classList.add('show');
-    setTimeout(() => tip.classList.remove('show'), 1800);
+    copyText(currentProd.huashu, '推荐语已复制，发给客户');
     return;
   }
 });
